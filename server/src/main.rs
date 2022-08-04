@@ -16,6 +16,9 @@ struct Opt {
 
     #[clap(short = 'l', long = "log", default_value = "debug")]
     log_level: String,
+
+    #[clap(long = "static-dir", default_value = "./dist")]
+    static_dir: String,
 }
 
 #[tokio::main]
@@ -29,7 +32,11 @@ async fn main() {
     tracing_subscriber::fmt::init();
 
     let app = Router::new()
-        .route("/", get(hello))
+        .route("/api/hello", get(hello))
+        .merge(axum_extra::routing::SpaRouter::new(
+            "/assets",
+            opt.static_dir,
+        ))
         .layer(ServiceBuilder::new().layer(TraceLayer::new_for_http()));
 
     let sock_addr = SocketAddr::from((
